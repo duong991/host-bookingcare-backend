@@ -55,7 +55,6 @@ let updateDetailSpecialtyById = async (req, res) => {
 };
 let deleteDetailSpecialtyById = async (req, res) => {
     try {
-        console.log(req.body.id);
         let result = await specialtyService.deleteDetailSpecialtyByIdService(
             req.body.id
         );

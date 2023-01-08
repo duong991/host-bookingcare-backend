@@ -9,12 +9,17 @@ let handleUserLogin = (email, password) => {
             let isExist = await checkUserEmail(email); //  check email exist
             if (isExist) {
                 let user = await db.User.findOne({
-                    attributes: ["email", "password", "roleId", "fullName"],
+                    attributes: [
+                        "id",
+                        "email",
+                        "password",
+                        "roleId",
+                        "fullName",
+                    ],
                     where: { email: email },
                     raw: true,
                 });
                 if (user) {
-                    console.log(user);
                     let check = bcrypt.compareSync(password, user.password);
                     if (check) {
                         userData.errCode = 0;
@@ -193,7 +198,6 @@ let UpdateUser = (data) => {
                             },
                             raw: false,
                         });
-                    console.log(userClinic);
                     if (!created) {
                         userClinic.clinicId = data.clinic;
                     }

@@ -49,6 +49,13 @@ let initAPIRouter = function (app) {
         doctorController.getProfileDoctorById
     );
 
+    router.get(
+        "/api/get-list-patient-for-doctor",
+        doctorController.getListPatientsForDoctor
+    );
+
+    router.post("/api/send-remedy", doctorController.sendRemedy);
+
     router.post(
         "/api/patient-book-appointment",
         patientController.postBookAppointment

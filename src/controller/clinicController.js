@@ -53,7 +53,6 @@ let updateDetailClinicById = async (req, res) => {
 };
 let deleteDetailClinicById = async (req, res) => {
     try {
-        console.log(req.body.id);
         let result = await clinicService.deleteDetailClinicByIdService(
             req.body.id
         );
