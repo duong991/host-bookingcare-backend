@@ -1,7 +1,6 @@
 import db from "../models/index";
 import _ from "lodash";
 import emailService from "./emailService";
-
 require("dotenv").config();
 const { Op } = require("sequelize");
 
@@ -72,8 +71,6 @@ let updateDetailDoctorService = (data) => {
                 priceId: data.selectedPrice,
                 provinceId: data.selectedProvince,
                 paymentId: data.selectedPayment,
-                addressClinic: data.addressClinic,
-                nameClinic: data.nameClinic,
                 note: data.note,
                 clinicId: data.selectedClinic,
                 specialtyId: data.selectedSpecialty,
@@ -220,8 +217,6 @@ let getMarkdownByIdDoctorService = (id) => {
                     "priceId",
                     "provinceId",
                     "paymentId",
-                    "addressClinic",
-                    "nameClinic",
                     "note",
                     "clinicId",
                     "specialtyId",
@@ -370,8 +365,12 @@ let getExtraInfoDoctorByIdService = (id) => {
                         as: "paymentData",
                         attributes: ["valueEn", "valueVi"],
                     },
+                    {
+                        model: db.Clinic,
+                        attributes: ["name", "address"],
+                    },
                 ],
-                raw: false,
+                raw: true,
                 nest: true,
             });
             if (!data) data = {};
@@ -419,6 +418,10 @@ let getProfileDoctorByIdService = (id) => {
                                     model: db.Allcode,
                                     as: "paymentData",
                                     attributes: ["valueEn", "valueVi"],
+                                },
+                                {
+                                    model: db.Clinic,
+                                    attributes: ["id", "name", "address"],
                                 },
                             ],
                         },

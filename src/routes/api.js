@@ -66,6 +66,11 @@ let initAPIRouter = function (app) {
         patientController.postVerifyBookAppointment
     );
 
+    router.post(
+        "/api/cancel-book-appointment",
+        patientController.postCancelBookAppointment
+    );
+
     // xây dựng api quản lý chuyên khoa
     router.post(
         "/api/create-new-specialty",
