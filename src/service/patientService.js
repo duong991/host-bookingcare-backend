@@ -34,77 +34,102 @@ let postBookAppointmentService = (data) => {
                     errMessage: "Missing required parameters!",
                 });
             } else {
-                let token = uuidv4();
-                let tokenRemove = uuidv4();
-                await emailService.sendSimpleEmail({
-                    receiveEmail: data.email,
-                    fullName: data.fullName,
-                    time: data.timeString,
-                    doctorName: data.doctorName,
-                    language: data.language,
-                    redirectLink: buildUrlEmail(data.doctorId, token),
-                });
-
-                let [user, result] = await db.User.findOrCreate({
-                    where: { email: data.email },
-                    defaults: {
-                        email: data.email,
-                        fullName: data.fullName,
-                        address: data.address,
-                        phoneNumber: data.phoneNumber,
-                        gender: data.selectedGender,
-                        roleId: "R3",
+                let schedule = await db.Schedule.findOne({
+                    where: {
+                        doctor: data.doctorId,
+                        ClinicId: data.clinicId,
+                        timeType: data.timeType,
+                        date: data.date,
                     },
                     raw: false,
                 });
-                // User đã tồn tại trong CSDL
-                if (!result) {
-                    user.fullName = data.fullName;
-                    user.address = data.address;
-                    user.phoneNumber = data.phoneNumber;
-                    user.gender = data.selectedGender;
 
-                    await user.save();
-                }
-
-                // create a booking record
-                let { id } = user;
-                if (user) {
-                    let [booking, result] = await db.Booking.findOrCreate({
-                        where: { patientId: id, date: data.date },
-                        defaults: {
-                            statusId: "S1",
-                            doctorId: data.doctorId,
-                            patientId: id,
-                            date: data.date,
-                            timeType: data.timeType,
-                            token: token,
-                            tokenRemove: tokenRemove,
-                            ClinicId: data.clinicId,
-                        },
+                if (schedule.currentNumber >= 5) {
+                    resolve({
+                        errCode: 2,
+                        errMessage: "Lịch hẹn đã vượt quá số lượng cho phép!",
                     });
-                    // Lịch hẹn đã tồn tại trong CSDL
-                    if (!result) {
-                        await emailService.sendRemoveBooking({
-                            receiveEmail: data.email,
+                } else {
+                    let token = uuidv4();
+                    let tokenRemove = uuidv4();
+                    await emailService.sendSimpleEmail({
+                        receiveEmail: data.email,
+                        fullName: data.fullName,
+                        time: data.timeString,
+                        doctorName: data.doctorName,
+                        language: data.language,
+                        redirectLink: buildUrlEmail(data.doctorId, token),
+                    });
+
+                    let [user, result] = await db.User.findOrCreate({
+                        where: { email: data.email },
+                        defaults: {
+                            email: data.email,
                             fullName: data.fullName,
-                            time: data.timeString,
-                            doctorName: data.doctorName,
-                            redirectLink: buildUrlEmailCancel(
-                                data.doctorId,
-                                booking.tokenRemove
-                            ),
+                            address: data.address,
+                            phoneNumber: data.phoneNumber,
+                            gender: data.selectedGender,
+                            roleId: "R3",
+                        },
+                        raw: false,
+                    });
+                    // User đã tồn tại trong CSDL
+                    if (!result) {
+                        user.fullName = data.fullName;
+                        user.address = data.address;
+                        user.phoneNumber = data.phoneNumber;
+                        user.gender = data.selectedGender;
+
+                        await user.save();
+                    }
+
+                    // create a booking record
+                    let { id } = user;
+                    if (user) {
+                        let [booking, result] = await db.Booking.findOrCreate({
+                            where: {
+                                patientId: id,
+                                date: data.date,
+                                doctorId: data.doctorId,
+                                [Op.or]: [
+                                    { statusId: "S1" },
+                                    { statusId: "S2" },
+                                ],
+                            },
+                            defaults: {
+                                statusId: "S1",
+                                doctorId: data.doctorId,
+                                patientId: id,
+                                date: data.date,
+                                timeType: data.timeType,
+                                token: token,
+                                tokenRemove: tokenRemove,
+                                ClinicId: data.clinicId,
+                            },
                         });
-                        resolve({
-                            errCode: 0,
-                            message:
-                                "Tài khoản đã tồn tại lịch hẹn. Để đặt lịch hẹn mới vui lòng truy cập email để hủy",
-                        });
-                    } else {
-                        resolve({
-                            errCode: 0,
-                            message: "Khởi tạo lịch hẹn thành công",
-                        });
+                        // Lịch hẹn đã tồn tại trong CSDL
+                        if (!result) {
+                            await emailService.sendRemoveBooking({
+                                receiveEmail: data.email,
+                                fullName: data.fullName,
+                                time: data.timeString,
+                                doctorName: data.doctorName,
+                                redirectLink: buildUrlEmailCancel(
+                                    data.doctorId,
+                                    booking.tokenRemove
+                                ),
+                            });
+                            resolve({
+                                errCode: 0,
+                                message:
+                                    "Tài khoản đã tồn tại lịch hẹn. Để đặt lịch hẹn mới vui lòng truy cập email để hủy",
+                            });
+                        } else {
+                            resolve({
+                                errCode: 0,
+                                message: "Khởi tạo lịch hẹn thành công",
+                            });
+                        }
                     }
                 }
             }
@@ -124,35 +149,51 @@ let postVerifyBookAppointmentService = (data) => {
                     errMessage: "Missing required parameters!",
                 });
             } else {
-                const fifteenMinutesInMs = 15 * 60 * 1000;
-
+                console.log(data);
                 let appointment = await db.Booking.findOne({
                     where: {
-                        doctorId: data.doctorId,
+                        doctorId: +data.doctorId,
                         token: data.token,
                         statusId: "S1",
                     },
                     raw: false,
                 });
-                // console.log(appointment);
-                // console.log(new Date().getTime());
-                // console.log(appointment.createdAt.getTime());
-                // console.log(
-                //     appointment.createdAt.getTime() + fifteenMinutesInMs
-                // );
-
+                let timeType = appointment.timeType;
+                let date = appointment.date;
+                let clinicId = appointment.ClinicId;
                 if (appointment) {
-                    appointment.statusId = "S2";
-                    await appointment.save();
-                    resolve({
-                        errCode: 0,
-                        errMessage: "Update appointment success!",
+                    let schedule = await db.Schedule.findOne({
+                        where: {
+                            timeType: timeType,
+                            date: date,
+                            clinicId: clinicId,
+                            doctorId: data.doctorId,
+                        },
+                        raw: false,
                     });
+                    if (schedule.currentNumber < schedule.maxNumber) {
+                        // tăng số lượng lịch hẹn trong 1 khoảng thời gian lên 1
+                        schedule.currentNumber++;
+                        await schedule.save();
+                        // Xác nhận lịch hẹn thành công
+                        appointment.statusId = "S2";
+                        await appointment.save();
+                        resolve({
+                            errCode: 0,
+                            errMessage: "Xác nhận lịch hẹn thành công!",
+                        });
+                    } else {
+                        resolve({
+                            errCode: 0,
+                            errMessage:
+                                "Số lượng lịch hẹn có thể đặt trong khoảng thời gian này đã vượt quá giới hạn!",
+                        });
+                    }
                 } else {
                     resolve({
                         errCode: 2,
                         errMessage:
-                            "Appointment has been activated or does not exist",
+                            "Lịch hẹn đã được xác nhận hoặc không tồn tại!",
                     });
                 }
             }
@@ -181,9 +222,27 @@ let postCancelBookAppointmentService = (data) => {
                     },
                     raw: false,
                 });
-                console.log(appointment);
 
                 if (appointment) {
+                    if (appointment.statusId === "S2") {
+                        // nếu lịch hẹn đã được xác nhận, tiến hành giảm số lịch hẹn trong khoảng thời gian đó
+                        let timeType = appointment.timeType;
+                        let date = appointment.date;
+                        let clinicId = appointment.ClinicId;
+
+                        let schedule = await db.Schedule.findOne({
+                            where: {
+                                timeType: timeType,
+                                date: date,
+                                clinicId: clinicId,
+                                doctorId: data.doctorId,
+                            },
+                            raw: false,
+                        });
+
+                        schedule.currentNumber--;
+                        schedule.save();
+                    }
                     appointment.statusId = "S4";
                     await appointment.save();
                     resolve({

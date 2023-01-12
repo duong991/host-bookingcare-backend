@@ -245,6 +245,7 @@ let bulkCreateScheduleService = (data) => {
                 if (schedule && schedule.length > 0) {
                     schedule = schedule.map((item) => {
                         item.maxNumber = MAX_NUMBER_SCHEDULE;
+                        item.currentNumber = 0;
                         return item;
                     });
                 }
@@ -291,6 +292,31 @@ let bulkCreateScheduleService = (data) => {
                     },
                 });
                 resolve({ errCode: 0, message: "Ok" });
+            }
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+let deleteScheduleService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.doctorId || !data.currentDate) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing result parameters",
+                });
+            } else {
+                await db.Schedule.destroy({
+                    where: {
+                        doctorId: data.doctorId,
+                        date: data.currentDate.toString(),
+                    },
+                });
+                resolve({
+                    errCode: 0,
+                });
             }
         } catch (error) {
             reject(error);
@@ -542,6 +568,7 @@ module.exports = {
     getDetailDoctorByIdService,
     getMarkdownByIdDoctorService,
     bulkCreateScheduleService,
+    deleteScheduleService,
     getScheduleDoctorByDateService,
     getExtraInfoDoctorByIdService,
     getProfileDoctorByIdService,

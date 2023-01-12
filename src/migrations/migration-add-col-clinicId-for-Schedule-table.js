@@ -4,7 +4,7 @@ module.exports = {
         // logic for transforming into the new state
 
         await queryInterface.addColumn(
-            "Bookings",
+            "Schedules",
             "clinicId",
             Sequelize.INTEGER
         );
@@ -12,6 +12,6 @@ module.exports = {
 
     down: async (queryInterface, Sequelize) => {
         // logic for reverting the changes
-        await queryInterface.removeColumn("Bookings", "clinicId");
+        await queryInterface.removeColumn("Schedules", "clinicId");
     },
 };

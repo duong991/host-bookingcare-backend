@@ -4,6 +4,8 @@ import doctorController from "../controller/doctorController";
 import patientController from "../controller/patientController";
 import specialtyController from "../controller/specialtyController";
 import clinicController from "../controller/clinicController";
+import adminHospitalController from "../controller/adminHospitalController";
+
 let router = express.Router();
 
 let initAPIRouter = function (app) {
@@ -34,6 +36,7 @@ let initAPIRouter = function (app) {
         "/api/bulk-create-schedule",
         doctorController.bulkCreateSchedule
     );
+    router.post("/api/delete-schedule", doctorController.deleteSchedule);
     router.get(
         "/api/get-schedule-doctor-by-date",
         doctorController.getScheduleDoctorByDate
@@ -106,6 +109,21 @@ let initAPIRouter = function (app) {
         "/api/delete-clinic-by-id",
         clinicController.deleteDetailClinicById
     );
+
+    // api quản lý lịch hẹn bác sĩ dành cho admin bệnh viện
+    // router.post("/api/get-all-doctor-have-schedule-of-day", clinicController.createNewClinic);
+
+    router.get(
+        "/api/get-all-doctor-by-clinicId",
+        adminHospitalController.getAllDoctorByClinicId
+    );
+
+    router.get(
+        "/api/get-clinicId-for-admin-hospital",
+        adminHospitalController.getClinicIdForAdminHospital
+    );
+
+    router.post("/api/check-doctors", adminHospitalController.checkDoctors);
 
     return app.use("/", router);
 };
