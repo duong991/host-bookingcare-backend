@@ -59,7 +59,7 @@ let getClinicIdForAdminHospitalService = (id) => {
 let checkDoctorService = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (!data.doctors || !data.currentDate || !data.ClinicId) {
+            if (!data.doctors || !data.currentDate || !data.clinicId) {
                 resolve({
                     errCode: 1,
                     errMessage: "Missing required parameters!",
@@ -73,7 +73,7 @@ let checkDoctorService = (data) => {
                     ...(await db.Schedule.findAll({
                         where: {
                             date: date,
-                            clinicId: data.ClinicId,
+                            clinicId: data.clinicId,
                         },
                         attributes: [
                             [

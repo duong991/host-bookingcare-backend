@@ -36,8 +36,8 @@ let postBookAppointmentService = (data) => {
             } else {
                 let schedule = await db.Schedule.findOne({
                     where: {
-                        doctor: data.doctorId,
-                        ClinicId: data.clinicId,
+                        doctorId: data.doctorId,
+                        clinicId: data.clinicId,
                         timeType: data.timeType,
                         date: data.date,
                     },
@@ -104,7 +104,7 @@ let postBookAppointmentService = (data) => {
                                 timeType: data.timeType,
                                 token: token,
                                 tokenRemove: tokenRemove,
-                                ClinicId: data.clinicId,
+                                clinicId: data.clinicId,
                             },
                         });
                         // Lịch hẹn đã tồn tại trong CSDL
@@ -160,7 +160,7 @@ let postVerifyBookAppointmentService = (data) => {
                 });
                 let timeType = appointment.timeType;
                 let date = appointment.date;
-                let clinicId = appointment.ClinicId;
+                let clinicId = appointment.clinicId;
                 if (appointment) {
                     let schedule = await db.Schedule.findOne({
                         where: {
@@ -228,7 +228,7 @@ let postCancelBookAppointmentService = (data) => {
                         // nếu lịch hẹn đã được xác nhận, tiến hành giảm số lịch hẹn trong khoảng thời gian đó
                         let timeType = appointment.timeType;
                         let date = appointment.date;
-                        let clinicId = appointment.ClinicId;
+                        let clinicId = appointment.clinicId;
 
                         let schedule = await db.Schedule.findOne({
                             where: {
