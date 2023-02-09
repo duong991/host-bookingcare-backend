@@ -130,8 +130,81 @@ function checkDoctors(doctors, dataFromDB) {
     }
     return checkResult;
 }
+
+let getAllBookingService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.currentDate || !data.clinicId) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing required parameters!",
+                });
+            } else {
+                let date = "" + data.currentDate;
+                let clinicId = data.clinicId;
+
+                let result = await db.Booking.findAll({
+                    where: { date: date, clinicId: clinicId, statusId: "S2" },
+                    attributes: ["id", "doctorId", "patientId"],
+                    include: [
+                        {
+                            model: db.User,
+                            as: "patientData",
+                            attributes: ["email", "fullName", "phoneNumber"],
+                        },
+                        {
+                            model: db.User,
+                            as: "doctorData",
+                            attributes: ["email", "fullName"],
+                        },
+                        {
+                            model: db.Allcode,
+                            as: "timeTypeDataPatient",
+                            attributes: ["valueEn", "valueVi"],
+                        },
+                    ],
+
+                    raw: false,
+                    nest: true,
+                });
+                resolve({ errCode: 0, errMessage: "Ok", data: result });
+            }
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
+    });
+};
+
+let deleteBookingService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.id) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing required parameters!",
+                });
+            } else {
+                let result = await db.Booking.findOne({
+                    where: { id: data.id },
+
+                    raw: false,
+                });
+                result.statusId = "S4";
+                await result.save();
+                resolve({ errCode: 0, errMessage: "Ok" });
+            }
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
+    });
+};
+
 module.exports = {
     getAllDoctorByClinicIdService,
     getClinicIdForAdminHospitalService,
     checkDoctorService,
+    getAllBookingService,
+    deleteBookingService,
 };

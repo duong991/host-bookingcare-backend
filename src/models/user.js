@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "patientId",
                 as: "patientData",
             });
+
+            User.hasMany(models.Booking, {
+                foreignKey: "doctorId",
+                as: "doctorData",
+            });
         }
     }
     User.init(
@@ -42,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
             image: DataTypes.STRING,
             gender: DataTypes.STRING,
             roleId: DataTypes.STRING,
+            tokenPassword: DataTypes.STRING,
         },
         {
             sequelize,

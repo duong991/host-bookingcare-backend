@@ -551,6 +551,13 @@ let sendRemedyService = (data) => {
                     await appointment.save();
                 }
 
+                // save to table history
+                await db.History.create({
+                    patientId: data.patientId,
+                    doctorId: data.doctorId,
+                    image: data.imageBase64,
+                    description: data.description,
+                });
                 // send email remedy
                 await emailService.sendAttachment(data);
                 resolve({ errCode: 0, message: "Ok" });

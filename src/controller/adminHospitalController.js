@@ -40,8 +40,35 @@ let checkDoctors = async (req, res) => {
             .json({ errorCode: -1, message: "Error from server..." });
     }
 };
+
+let getAllBooking = async (req, res) => {
+    try {
+        let result = await adminHospitalService.getAllBookingService(req.query);
+        return res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        return res
+            .status(200)
+            .json({ errorCode: -1, message: "Error from server..." });
+    }
+};
+
+let deleteBooking = async (req, res) => {
+    try {
+        let result = await adminHospitalService.deleteBookingService(req.body);
+        return res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        return res
+            .status(200)
+            .json({ errorCode: -1, message: "Error from server..." });
+    }
+};
+
 module.exports = {
     getAllDoctorByClinicId,
     getClinicIdForAdminHospital,
     checkDoctors,
+    getAllBooking,
+    deleteBooking,
 };

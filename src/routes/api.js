@@ -16,6 +16,7 @@ let initAPIRouter = function (app) {
     router.put("/api/update-user", userController.handleUpdateUser);
     router.get("/api/all-code", userController.getAllCode);
     router.get("/api/get-user-clinic-by-id", userController.getUserClinicById);
+    router.post("/api/forgot-password", userController.forgotPassword);
 
     router.get("/api/top-doctor-home", doctorController.getDoctorHome);
     router.get("/api/get-all-doctors", doctorController.getAllDoctor);
@@ -23,6 +24,7 @@ let initAPIRouter = function (app) {
         "/api/update-detail-doctor",
         doctorController.updateDetailDoctor
     );
+    router.post("/api/change-password", userController.changePassword);
     router.get(
         "/api/get-detail-doctor-by-id",
         doctorController.getDetailDoctorById
@@ -74,6 +76,10 @@ let initAPIRouter = function (app) {
         patientController.postCancelBookAppointment
     );
 
+    router.post(
+        "/api/verify-reset-password",
+        userController.postVerifyResetPassword
+    );
     // xây dựng api quản lý chuyên khoa
     router.post(
         "/api/create-new-specialty",
@@ -124,6 +130,9 @@ let initAPIRouter = function (app) {
     );
 
     router.post("/api/check-doctors", adminHospitalController.checkDoctors);
+    router.get("/api/get-all-booking", adminHospitalController.getAllBooking);
+
+    router.post("/api/delete-booking", adminHospitalController.deleteBooking);
 
     return app.use("/", router);
 };

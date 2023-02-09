@@ -149,8 +149,99 @@ let sendRemoveBooking = async (dataSend) => {
         }
     });
 };
+
+let verificationEmail = async (dataSend) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 587,
+                secure: false, // true for 465, false for other ports
+                auth: {
+                    user: process.env.EMAIL_APP, // generated ethereal user
+                    pass: process.env.EMAIL_APP_PASSWORD, // generated ethereal password
+                },
+            });
+
+            // send mail with defined transport object
+            let info = await transporter.sendMail({
+                from: '"BookingCare👻" <dongminhduong991@gmail.com>', // sender address
+                to: dataSend.receiveEmail, // list of receivers
+                subject: "Xác nhận yêu cầu đổi mật khẩu", // Subject line
+                // text: "Hello world?", // plain text body
+                html: getBodyHTMLVerificationEmail(dataSend), // html body
+            });
+
+            resolve(true);
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+let getBodyHTMLVerificationEmail = (dataSend) => {
+    let result = "";
+    result = `
+        <h3>Xin chào ${dataSend.fullName}, </h3>
+        <p>Cảm ơn bạn đã yêu cầu đổi mật khẩu. Chúng tôi cần xác nhận rằng bạn đã thực hiện yêu cầu này và muốn thay đổi mật khẩu của bạn.</p>
+        <p>Vui lòng nhấp vào liên kết bên dưới để hoàn tất quá trình xác nhận: </p>
+       
+        <a href=${dataSend.redirectLink} target="_blank" style="background-color:#000000;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:16px;line-height:28px;padding:13px 27px;text-align:center;text-decoration:none;border:1px solid #000000">Click here</a>
+        <p>Nếu bạn không yêu cầu đổi mật khẩu, vui lòng bỏ qua email này hoặc liên hệ với chúng tôi để được hỗ trợ.</p>
+        <br/>
+        <b>Trân trọng</b>
+        <p>Hệ thống đặt lịch khám bệnh BookingCare</p>
+
+    `;
+    return result;
+};
+
+let sendPasswordEmail = async (dataSend) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 587,
+                secure: false, // true for 465, false for other ports
+                auth: {
+                    user: process.env.EMAIL_APP, // generated ethereal user
+                    pass: process.env.EMAIL_APP_PASSWORD, // generated ethereal password
+                },
+            });
+
+            // send mail with defined transport object
+            let info = await transporter.sendMail({
+                from: '"BookingCare👻" <dongminhduong991@gmail.com>', // sender address
+                to: dataSend.receiveEmail, // list of receivers
+                subject: "Reset mật khẩu thành công", // Subject line
+                // text: "Hello world?", // plain text body
+                html: getBodyHTMLSendPasswordEmail(dataSend), // html body
+            });
+
+            resolve(true);
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+let getBodyHTMLSendPasswordEmail = (dataSend) => {
+    let result = "";
+    result = `
+        <h3>Xin chào ${dataSend.fullName}, </h3>
+        <p>Yêu cầu đổi mật khẩu đã được thực hiện thành công</p>
+        <p>Mật khẩu mới: ${dataSend.newPassword}</p>
+        <br/>
+        <b>Trân trọng</b>
+        <p>Hệ thống đặt lịch khám bệnh BookingCare</p>
+
+    `;
+    return result;
+};
 module.exports = {
     sendSimpleEmail,
     sendAttachment,
     sendRemoveBooking,
+    verificationEmail,
+    sendPasswordEmail,
 };

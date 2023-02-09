@@ -1,7 +1,21 @@
 import db from "../models/index";
 import bcrypt from "bcryptjs";
-const salt = bcrypt.genSaltSync(10);
 import Sequelize from "sequelize";
+import emailService from "./emailService";
+import { v4 as uuidv4 } from "uuid";
+
+const salt = bcrypt.genSaltSync(10);
+const { Op } = require("sequelize");
+const cron = require("cron");
+const crypto = require("crypto");
+
+let buildUrlEmailPassword = (userId, token) => {
+    let result = `${process.env.URL_REACT}/verification-email?token=${token}&userId=${userId}`;
+    return result;
+};
+let generateRandomPassword = (length) => {
+    return crypto.randomBytes(length / 2).toString("hex");
+};
 
 let handleUserLogin = (email, password) => {
     return new Promise(async (resolve, reject) => {
@@ -241,6 +255,159 @@ let GetAllCodeService = (typeInput) => {
         }
     });
 };
+
+let forgotPasswordService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.email) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing required parameters!",
+                });
+            } else {
+                let user = await db.User.findOne({
+                    where: {
+                        email: data.email,
+                        [Op.or]: [
+                            { roleId: "R1" },
+                            { roleId: "R2" },
+                            { roleId: "R4" },
+                        ],
+                    },
+                    raw: false,
+                });
+                if (user) {
+                    let token = uuidv4();
+                    user.tokenPassword = token;
+                    await user.save();
+
+                    // Use cron to schedule a task to run every 5 minutes
+                    const job = new cron.CronJob("*/5 * * * *", function () {
+                        // Code to delete data from the database
+                        db.User.update(
+                            {
+                                tokenPassword: null,
+                            },
+                            { where: { id: user.id } }
+                        );
+                    });
+                    job.start();
+
+                    await emailService.verificationEmail({
+                        receiveEmail: user.email,
+                        fullName: user.fullName,
+                        redirectLink: buildUrlEmailPassword(user.id, token),
+                    });
+                    resolve({
+                        errCode: 0,
+                        errMessage:
+                            "Xác nhận lại yêu cầu đổi mật khẩu trong email",
+                    });
+                } else {
+                    resolve({
+                        errCode: 0,
+                        errMessage: "Email không tồn tại trong hệ thống",
+                    });
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
+    });
+};
+
+let postVerifyResetPasswordService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.token || !data.userId) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing required parameters!",
+                });
+            } else {
+                let result = await db.User.findOne({
+                    where: {
+                        id: +data.userId,
+                        tokenPassword: data.token,
+                    },
+                    raw: false,
+                });
+
+                if (result) {
+                    // clear token reset mật khẩu
+                    result.tokenPassword = null;
+                    // khởi tạo 1 password ngẫu nhiên
+                    let newPassword = generateRandomPassword(8);
+                    // mã hóa password vừa tạo thực hiện lưu lại vào DB
+                    let hashPassword = bcrypt.hashSync(newPassword, salt);
+                    result.password = hashPassword;
+                    await result.save();
+
+                    // thực hiện gửi email tới người dùng đính kèm thêm password mới
+                    await emailService.sendPasswordEmail({
+                        fullName: result.fullName,
+                        newPassword: newPassword,
+                        receiveEmail: result.email,
+                    });
+                    resolve({
+                        errCode: 0,
+                        errMessage:
+                            "Reset mật khẩu thành công. Vui lòng check email",
+                    });
+                } else {
+                    resolve({
+                        errCode: 2,
+                        errMessage: "Token hoặc id người dùng không tồn tại",
+                    });
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
+    });
+};
+let changePasswordService = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!data.oldPass || !data.newPass || !data.email) {
+                resolve({
+                    errCode: 1,
+                    errMessage: "Missing required parameters!",
+                });
+            } else {
+                let user = await db.User.findOne({
+                    attributes: ["id", "password"],
+                    where: { email: data.email },
+                    raw: false,
+                });
+                console.log(user);
+
+                if (user) {
+                    let check = bcrypt.compareSync(data.oldPass, user.password);
+                    if (check) {
+                        let hashPassword = bcrypt.hashSync(data.newPass, salt);
+                        user.password = hashPassword;
+                        await user.save();
+                        resolve({
+                            errCode: 0,
+                            errMessage: "Ok",
+                        });
+                    } else {
+                        resolve({
+                            errCode: 2,
+                            errMessage: "Mật khẩu không đúng",
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
+    });
+};
 module.exports = {
     handleUserLogin,
     getAllUser,
@@ -248,4 +415,7 @@ module.exports = {
     DeleteUser,
     UpdateUser,
     GetAllCodeService,
+    forgotPasswordService,
+    postVerifyResetPasswordService,
+    changePasswordService,
 };

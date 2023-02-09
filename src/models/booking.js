@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
                 as: "patientData",
             });
 
+            Booking.belongsTo(models.User, {
+                foreignKey: "doctorId",
+                targetId: "id",
+                as: "doctorData",
+            });
+
             Booking.belongsTo(models.Allcode, {
                 foreignKey: "timeType",
                 targetKey: "keyMap",
@@ -32,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
             timeType: DataTypes.STRING,
             token: DataTypes.STRING,
             tokenRemove: DataTypes.STRING,
+            reason: DataTypes.STRING,
         },
         {
             sequelize,

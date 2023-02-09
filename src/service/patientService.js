@@ -19,7 +19,6 @@ let buildUrlEmailCancel = (doctorId, token) => {
 let postBookAppointmentService = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log(data);
             if (
                 !data.email ||
                 !data.doctorId ||
@@ -27,7 +26,8 @@ let postBookAppointmentService = (data) => {
                 !data.timeType ||
                 !data.fullName ||
                 !data.selectedGender ||
-                !data.clinicId
+                !data.clinicId ||
+                !data.reason
             ) {
                 resolve({
                     errCode: 1,
@@ -105,6 +105,7 @@ let postBookAppointmentService = (data) => {
                                 token: token,
                                 tokenRemove: tokenRemove,
                                 clinicId: data.clinicId,
+                                reason: data.reason,
                             },
                         });
                         // Lịch hẹn đã tồn tại trong CSDL
@@ -149,7 +150,6 @@ let postVerifyBookAppointmentService = (data) => {
                     errMessage: "Missing required parameters!",
                 });
             } else {
-                console.log(data);
                 let appointment = await db.Booking.findOne({
                     where: {
                         doctorId: +data.doctorId,
@@ -158,9 +158,11 @@ let postVerifyBookAppointmentService = (data) => {
                     },
                     raw: false,
                 });
+
                 let timeType = appointment.timeType;
                 let date = appointment.date;
                 let clinicId = appointment.clinicId;
+
                 if (appointment) {
                     let schedule = await db.Schedule.findOne({
                         where: {
@@ -213,7 +215,6 @@ let postCancelBookAppointmentService = (data) => {
                     errMessage: "Missing required parameters!",
                 });
             } else {
-                console.log(data.tokenRemove, data.doctorId);
                 let appointment = await db.Booking.findOne({
                     where: {
                         doctorId: data.doctorId,

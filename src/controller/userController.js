@@ -82,6 +82,42 @@ let getUserClinicById = async (req, res) => {
     }
 };
 
+let forgotPassword = async (req, res) => {
+    try {
+        let data = await userService.forgotPasswordService(req.body);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log("Get all code err: ", error);
+        return res
+            .status(200)
+            .json({ errCode: -1, errMessage: "Error from server" });
+    }
+};
+
+let postVerifyResetPassword = async (req, res) => {
+    try {
+        let result = await userService.postVerifyResetPasswordService(req.body);
+        return res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        return res
+            .status(200)
+            .json({ errorCode: -1, message: "Error from server..." });
+    }
+};
+
+let changePassword = async (req, res) => {
+    try {
+        let result = await userService.changePasswordService(req.body);
+        return res.status(200).json(result);
+    } catch (error) {
+        console.log(error);
+        return res
+            .status(200)
+            .json({ errorCode: -1, message: "Error from server..." });
+    }
+};
+
 module.exports = {
     handleLogin,
     handleGetAllUser,
@@ -90,4 +126,7 @@ module.exports = {
     handleUpdateUser,
     getAllCode,
     getUserClinicById,
+    forgotPassword,
+    postVerifyResetPassword,
+    changePassword,
 };
